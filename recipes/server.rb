@@ -47,13 +47,12 @@ end
 
 install_flag = "/root/.galera_cluster_installed"
 
-galera_config = data_bag_item('sql_galera_cluster', 'config')
-mysql_tarball = galera_config['mysql_wsrep_tarball_' + node['kernel']['machine']]
+mysql_tarball = node['galera']['mysql_wsrep_tarball_' + node['kernel']['machine']]
 # strip .tar.gz
 mysql_package = mysql_tarball[0..-8]
 
-mysql_wsrep_source = galera_config['mysql_wsrep_source']
-galera_source = galera_config['galera_source']
+mysql_wsrep_source = node['galera']['mysql_wsrep_source']
+galera_source = node['galera']['galera_source']
 
 # MySQL and Galera setup and configuration
 
@@ -78,9 +77,9 @@ end
 # Determine the correct Galera source to download
 case node['platform']
 when 'centos', 'redhat', 'fedora', 'suse', 'scientific', 'amazon'
-  galera_package = galera_config['galera_package_' + node['kernel']['machine']]['rpm']
+  galera_package = node['galera']['galera_package_' + node['kernel']['machine']]['rpm']
 else
-  galera_package = galera_config['galera_package_' + node['kernel']['machine']]['deb']
+  galera_package = node['galera']['galera_package_' + node['kernel']['machine']]['deb']
 end
 
 # Download the source package determined from above
@@ -197,11 +196,11 @@ end
 # Bootstrapping and managing cluster
 
 my_ip = node['ipaddress']
-init_host = galera_config['init_node']
+init_host = node['galera']['init_node']
 sync_host = init_host
 
 # Try to sync with a random node in the cluster, falling back the the init host
-hosts = galera_config['galera_nodes']
+hosts = node['galera']['galera_nodes']
 Chef::Log.info "init_host = #{init_host}, my_ip = #{my_ip}, hosts = #{hosts}"
 if File.exists?("#{install_flag}") && hosts != nil && hosts.length > 0
   i = 0
@@ -231,7 +230,7 @@ bash "set-wsrep-cluster-address" do
   code <<-EOH
   sed -i 's#.*wsrep_cluster_address.*=.*#wsrep_cluster_address=#{wsrep_cluster_address}#' #{node['mysql']['conf_dir']}/my.cnf
   EOH
-  only_if { (galera_config['update_wsrep_urls'] == 'yes') || !FileTest.exists?("#{install_flag}") }
+  only_if { (node['galera']['update_wsrep_urls'] == 'yes') || !FileTest.exists?("#{install_flag}") }
 end
 
 # If we are the init node then we need to start the cluster
@@ -282,7 +281,7 @@ bash "set-wsrep-grants-mysqldump" do
     #{node['mysql']['mysql_bin']} -uroot -h127.0.0.1 -e "GRANT ALL ON *.* TO '#{node['wsrep']['user']}'@'%' IDENTIFIED BY '#{node['wsrep']['password']}'"
     #{node['mysql']['mysql_bin']} -uroot -h127.0.0.1 -e "SET wsrep_on=0; GRANT ALL ON *.* TO '#{node['wsrep']['user']}'@'127.0.0.1' IDENTIFIED BY '#{node['wsrep']['password']}'"
   EOH
-  only_if { my_ip == init_host && (galera_config['sst_method'] == 'mysqldump') && !FileTest.exists?("#{install_flag}") }
+  only_if { my_ip == init_host && (node['galera']['sst_method'] == 'mysqldump') && !FileTest.exists?("#{install_flag}") }
 end
 
 # Help secure the default MySQL installation
@@ -292,7 +291,7 @@ bash "secure-mysql" do
     #{node['mysql']['mysql_bin']} -uroot -h127.0.0.1 -e "DROP DATABASE IF EXISTS test; DELETE FROM mysql.db WHERE DB='test' OR DB='test\\_%'"
     #{node['mysql']['mysql_bin']} -uroot -h127.0.0.1 -e "UPDATE mysql.user SET Password=PASSWORD('#{node['mysql']['root_password']}') WHERE User='root'; DELETE FROM mysql.user WHERE User=''; DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1'); FLUSH PRIVILEGES;"
   EOH
-  only_if { my_ip == init_host && (galera_config['secure'] == 'yes') && !FileTest.exists?("#{install_flag}") }
+  only_if { my_ip == init_host && (node['galera']['secure'] == 'yes') && !FileTest.exists?("#{install_flag}") }
 end
 
 # Ensure the MySQL server service is managed
