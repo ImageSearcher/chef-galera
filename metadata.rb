@@ -1,5 +1,6 @@
-maintainer       "Convergint Technologies LLC"
-maintainer_email "trent.petersen@convergint.com"
+name 'chef-galera'
+maintainer       "Brad Folkens"
+maintainer_email "bfolkens@gmail.com"
 license          "Apache 2.0"
 description      "Installs Galera Cluster for MySQL"
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
