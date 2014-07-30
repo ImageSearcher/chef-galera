@@ -26,16 +26,4 @@ else
     key node['galera']['apt']['key']
     action :add
   end
-
-
-  bash 'prep-mariadb-repo' do
-    user "root"
-    code <<-EOH
-      apt-get -y --force-yes install install python-software-properties
-      apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xcbcb082a1bb943db
-      add-apt-repository "deb  `lsb_release -c` main"
-      apt-get update
-    EOH
-    not_if { FileTest.exists?("#{node['wsrep']['provider']}") }
-  end
 end

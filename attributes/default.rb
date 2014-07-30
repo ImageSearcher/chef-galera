@@ -7,18 +7,14 @@
 # FHS location would be /var/lib/chef/ohai_plugins or similar.           
 default["vagrant-ohai"]["plugin_path"] = "/etc/chef/vagrant_ohai_plugins"
 
-case node['platform']
-when 'centos', 'redhat', 'fedora', 'suse', 'scientific', 'amazon'
-
-  default['mysql']['servicename'] = "mysqld"
-  default['xtra']['packages'] = "openssl psmisc libaio wget rsync nc"
-
-else
-
-  default['mysql']['servicename'] = "mysql"
-  default['xtra']['packages'] = "libssl0.9.8 psmisc libaio1 wget rsync netcat"
-
-end
+# case node['platform']
+# when 'centos', 'redhat', 'fedora', 'suse', 'scientific', 'amazon'
+#   default['mysql']['servicename'] = "mysqld"
+#   default['xtra']['packages'] = "openssl psmisc libaio wget rsync nc"
+# else
+#   default['mysql']['servicename'] = "mysql"
+#   default['xtra']['packages'] = "libssl0.9.8 psmisc libaio1 wget rsync netcat"
+# end
 
 default['galera']['init_node'] = nil
 default['galera']['galera_nodes'] = nil
@@ -37,7 +33,7 @@ default['galera']['apt']['key'] = '0xcbcb082a1bb943db'
 
 default['xtra']['sleep'] = 30
 
-default['mysql']['install_dir'] = "/usr/local"
+default['mysql']['install_dir'] = '/usr/local'
 default['mysql']['base_dir'] = "#{mysql['install_dir']}/mysql"
 default['mysql']['bin_dir']  = "#{mysql['base_dir']}/bin"
 default['mysql']['mysql_bin'] = "#{mysql['bin_dir']}/mysql"
