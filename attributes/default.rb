@@ -26,7 +26,7 @@ default['galera']['yum']['gpgkey'] = 'https://yum.mariadb.org/RPM-GPG-KEY-MariaD
 default['galera']['yum']['gpgcheck'] = true
 default['galera']['yum']['sslverify'] = true
 
-default['galera']['apt']['uri'] = "http://mirror3.layerjet.com/mariadb/repo/5.5/debian"
+default['galera']['apt']['uri'] = "http://nyc2.mirrors.digitalocean.com/mariadb/repo/5.5/debian"
 default['galera']['apt']['keyserver'] = 'keyserver.ubuntu.com'
 default['galera']['apt']['key'] = '0xcbcb082a1bb943db'
 default['galera']['apt']['components'] = ['main']
