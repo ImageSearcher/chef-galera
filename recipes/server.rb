@@ -52,9 +52,7 @@ include_recipe 'chef-galera::package_repo'
 
 # Install galera packages
 %w(rsync galera mariadb-galera-server mariadb-client).each do |package_name|
-  package package_name do
-    action :install
-  end
+  package package_name
 end
 
 # Create directories for MySQL
