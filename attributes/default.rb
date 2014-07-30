@@ -20,7 +20,20 @@ else
 
 end
 
-default['galera'] = {}
+default['galera']['init_node'] = nil
+default['galera']['galera_nodes'] = nil
+default['galera']['secure'] = 'yes'
+default['galera']['update_wsrep_urls'] = 'yes'
+
+default['galera']['yum']['baseurl'] = 'http://yum.mariadb.org/5.5/centos5-x86'
+default['galera']['yum']['gpgkey'] = 'https://yum.mariadb.org/RPM-GPG-KEY-MariaDB'
+default['galera']['yum']['gpgcheck'] = true
+default['galera']['yum']['sslverify'] = true
+
+default['galera']['apt']['uri'] = "http://mirror3.layerjet.com/mariadb/repo/5.5/debian"
+default['galera']['apt']['keyserver'] = 'keyserver.ubuntu.com'
+default['galera']['apt']['key'] = '0xcbcb082a1bb943db'
+
 
 default['xtra']['sleep'] = 30
 

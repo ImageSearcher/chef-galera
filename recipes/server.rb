@@ -47,110 +47,13 @@ end
 
 install_flag = "/root/.galera_cluster_installed"
 
-mysql_tarball = node['galera']['mysql_wsrep_tarball_' + node['kernel']['machine']]
-# strip .tar.gz
-mysql_package = mysql_tarball[0..-8]
+include_recipe 'chef-galera::user'
+include_recipe 'chef-galera::package_repo'
 
-mysql_wsrep_source = node['galera']['mysql_wsrep_source']
-galera_source = node['galera']['galera_source']
-
-# MySQL and Galera setup and configuration
-
-# Create MySQL group and user
-group "mysql" do
-end
-
-user "mysql" do
-  gid "mysql"
-  comment "MySQL server"
-  system true
-  shell "/bin/false"
-end
-
-# Download MySQL Source package
-Chef::Log.info "Downloading #{mysql_tarball}"
-remote_file "#{Chef::Config[:file_cache_path]}/#{mysql_tarball}" do
-  source "#{mysql_wsrep_source}/" + mysql_tarball
-  action :create_if_missing
-end
-
-# Determine the correct Galera source to download
-case node['platform']
-when 'centos', 'redhat', 'fedora', 'suse', 'scientific', 'amazon'
-  galera_package = node['galera']['galera_package_' + node['kernel']['machine']]['rpm']
-else
-  galera_package = node['galera']['galera_package_' + node['kernel']['machine']]['deb']
-end
-
-# Download the source package determined from above
-Chef::Log.info "Downloading #{galera_package}"
-remote_file "#{Chef::Config[:file_cache_path]}/#{galera_package}" do
-  source "#{galera_source}/" + galera_package
-  action :create_if_missing
-end
-
-# ????
-bash "install-mysql-package" do
-  user "root"
-  code <<-EOH
-    zcat #{Chef::Config[:file_cache_path]}/#{mysql_tarball} | tar xf - -C #{node['mysql']['install_dir']}
-    ln -sf #{node['mysql']['install_dir']}/#{mysql_package} #{node['mysql']['base_dir']}
-  EOH
-  not_if { File.directory?("#{node['mysql']['install_dir']}/#{mysql_package}") }
-end
-
-# Ensure and existing MySQL packages are purged from the system
-case node['platform']
-  when 'centos', 'redhat', 'fedora', 'suse', 'scientific', 'amazon'
-    bash "purge-mysql-galera" do
-      user "root"
-      code <<-EOH
-        killall -9 mysqld_safe mysqld &> /dev/null
-        yum remove mysql mysql-libs mysql-devel mysql-server mysql-bench
-        cd #{node['mysql']['data_dir']}
-        [ $? -eq 0 ] && rm -rf #{node['mysql']['data_dir']}/*
-        rm -rf /etc/my.cnf /etc/mysql
-        rm -f /root/#{install_flag}
-      EOH
-      only_if { !FileTest.exists?("#{install_flag}") }
-    end
-  else
-    bash "purge-mysql-galera" do
-      user "root"
-      code <<-EOH
-        killall -9 mysqld_safe mysqld &> /dev/null
-        apt-get -y remove --purge mysql-server mysql-client mysql-common
-        apt-get -y autoremove
-        apt-get -y autoclean
-        cd #{node['mysql']['data_dir']}
-        [ $? -eq 0 ] && rm -rf #{node['mysql']['data_dir']}/*
-        rm -rf /etc/my.cnf /etc/mysql
-        rm -f /root/#{install_flag}
-      EOH
-      only_if { !FileTest.exists?("#{install_flag}") }
-    end
-end
-
-# Install extra packages and the galera package already downloaded
-case node['platform']
-when 'centos', 'redhat', 'fedora', 'suse', 'scientific', 'amazon'
-  bash "install-galera" do
-    user "root"
-    code <<-EOH
-      yum -y localinstall #{node['xtra']['packages']}
-      yum -y localinstall #{Chef::Config[:file_cache_path]}/#{galera_package}
-    EOH
-    not_if { FileTest.exists?("#{node['wsrep']['provider']}") }
-  end
-else
-  bash "install-galera" do
-    user "root"
-    code <<-EOH
-      apt-get -y --force-yes install #{node['xtra']['packages']}
-      dpkg -i #{Chef::Config[:file_cache_path]}/#{galera_package}
-      apt-get -f install
-    EOH
-    not_if { FileTest.exists?("#{node['wsrep']['provider']}") }
+# Install galera packages
+%w(rsync galera mariadb-galera-server mariadb-client).each do |package_name|
+  package package_name do
+    action :install
   end
 end
 
