@@ -29,7 +29,7 @@ default['galera']['yum']['sslverify'] = true
 default['galera']['apt']['uri'] = "http://mirror3.layerjet.com/mariadb/repo/5.5/debian"
 default['galera']['apt']['keyserver'] = 'keyserver.ubuntu.com'
 default['galera']['apt']['key'] = '0xcbcb082a1bb943db'
-
+default['galera']['apt']['components'] = ['main']
 
 default['xtra']['sleep'] = 30
 

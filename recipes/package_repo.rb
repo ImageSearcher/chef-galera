@@ -24,6 +24,7 @@ else
     distribution node['lsb']['codename']
     keyserver node['galera']['apt']['keyserver']
     key node['galera']['apt']['key']
+    components node['galera']['apt']['components']
     action :add
   end
 end
