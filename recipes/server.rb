@@ -281,7 +281,7 @@ bash "set-wsrep-grants-mysqldump" do
     #{node['mysql']['mysql_bin']} -uroot -h127.0.0.1 -e "GRANT ALL ON *.* TO '#{node['wsrep']['user']}'@'%' IDENTIFIED BY '#{node['wsrep']['password']}'"
     #{node['mysql']['mysql_bin']} -uroot -h127.0.0.1 -e "SET wsrep_on=0; GRANT ALL ON *.* TO '#{node['wsrep']['user']}'@'127.0.0.1' IDENTIFIED BY '#{node['wsrep']['password']}'"
   EOH
-  only_if { my_ip == init_host && (node['galera']['sst_method'] == 'mysqldump') && !FileTest.exists?("#{install_flag}") }
+  only_if { my_ip == init_host && (node['wsrep']['sst_method'] == 'mysqldump') && !FileTest.exists?("#{install_flag}") }
 end
 
 # Help secure the default MySQL installation

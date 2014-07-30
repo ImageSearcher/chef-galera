@@ -20,6 +20,8 @@ else
 
 end
 
+default['galera'] = {}
+
 default['xtra']['sleep'] = 30
 
 default['mysql']['install_dir'] = "/usr/local"
