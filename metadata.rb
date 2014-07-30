@@ -12,6 +12,7 @@ depends 'yum', '~> 3.0'
 recipe 'server', 'Installs Galera Cluster for MySQL'
 recipe 'package_repo', 'Sets up the MariaDB official repository'
 recipe 'user', 'Install mysql user and group'
+recipe 'vagrant_fix', 'Vagrant host-only fix'
 
 %w{ debian ubuntu centos fedora redhat }.each do |os|
   supports os

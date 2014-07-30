@@ -17,72 +17,16 @@
 # limitations under the License.
 #
 
-# Vagrant host only fix
-Ohai::Config[:plugin_path] << node['vagrant-ohai']['plugin_path']
-Chef::Log.info("vagrant ohai plugins will be at: #{node['vagrant-ohai']['plugin_path']}")
-
-rd = remote_directory node['vagrant-ohai']['plugin_path'] do
-  source 'plugins'
-  owner 'root'
-  group 'root'
-  mode 0755
-  recursive true
-  action :nothing
-end
-
-rd.run_action(:create)
-
-# only reload ohai if new plugins were dropped off OR
-# node['vagrant-ohai']['plugin_path'] does not exists in client.rb
-if rd.updated? || 
-  !(::IO.read(Chef::Config[:config_file]) =~ /Ohai::Config\[:plugin_path\]\s*<<\s*["']#{node['vagrant-ohai']['plugin_path']}["']/)
-
-  ohai 'custom_plugins' do
-    action :nothing
-  end.run_action(:reload)
-
-end
-
-# Vagrant host only fix end
-
-install_flag = "/root/.galera_cluster_installed"
+include_recipe 'chef-galera::vagrant_fix'
 
 include_recipe 'chef-galera::user'
 include_recipe 'chef-galera::package_repo'
+
 
 # Install galera packages
 %w(rsync galera mariadb-galera-server mariadb-client).each do |package_name|
   package package_name
 end
-
-# # Create directories for MySQL
-# directory node['mysql']['data_dir'] do
-#   owner "mysql"
-#   group "mysql"
-#   mode "0755"
-#   action :create
-#   recursive true
-# end
-
-# directory node['mysql']['run_dir'] do
-#   owner "mysql"
-#   group "mysql"
-#   mode "0755"
-#   action :create
-#   recursive true
-# end
-
-# # Install db to the data directory
-# execute "setup-mysql-datadir" do
-#   command "#{node['mysql']['base_dir']}/scripts/mysql_install_db --force --user=mysql --basedir=#{node['mysql']['base_dir']} --datadir=#{node['mysql']['data_dir']}"
-#   not_if { FileTest.exists?("#{node['mysql']['data_dir']}/mysql/user.frm") }
-# end
-
-# # Copy init script to manage the SQL service
-# execute "setup-init.d-mysql-service" do
-#   command "cp #{node['mysql']['base_dir']}/support-files/mysql.server /etc/init.d/#{node['mysql']['servicename']}"
-#   not_if { FileTest.exists?("#{install_flag}") }
-# end
 
 # Ensure my.conf file is correctly configured
 template "my.cnf" do
@@ -94,7 +38,14 @@ template "my.cnf" do
 #  notifies :restart, "service[mysql]", :delayed
 end
 
-# Bootstrapping and managing cluster
+service "mysql" do
+  supports :restart => true, :start => true, :stop => true
+  service_name node['mysql']['servicename']
+  action :nothing
+end
+
+
+# Bootstrapping the cluster
 
 my_ip = node['ipaddress']
 init_host = node['galera']['init_node']
@@ -103,26 +54,24 @@ sync_host = init_host
 # Try to sync with a random node in the cluster, falling back the the init host
 hosts = node['galera']['galera_nodes']
 Chef::Log.info "init_host = #{init_host}, my_ip = #{my_ip}, hosts = #{hosts}"
-if File.exists?("#{install_flag}") && hosts != nil && hosts.length > 0
-  i = 0
-  begin
-    sync_host = hosts[rand(hosts.count)]
-    i += 1
-    if (i > hosts.count)
-      # no host found, use init node/host
-      sync_host = init_host
-      break
-    end
-  end while my_ip == sync_host
-end
+# TOOD: run on configure lifecycle event?
+# if File.exists?("#{install_flag}") && hosts != nil && hosts.length > 0
+#   i = 0
+#   begin
+#     sync_host = hosts[rand(hosts.count)]
+#     i += 1
+#     if (i > hosts.count)
+#       # no host found, use init node/host
+#       sync_host = init_host
+#       break
+#     end
+#   end while my_ip == sync_host
+# end
 
 # Update the address of the members of the cluster in the my.cnf file
 wsrep_cluster_address = 'gcomm://'
-if !File.exists?("#{install_flag}") && hosts != nil && hosts.length > 0
-  hosts.each do |h|
-    wsrep_cluster_address += "#{h}:#{node['wsrep']['port']},"
-  end
-  wsrep_cluster_address = wsrep_cluster_address[0..-2]
+if hosts != nil && hosts.length > 0
+  wsrep_cluster_address = hosts.map {|h| "#{h}:#{node['wsrep']['port']}" }.join(',')
 end
 
 Chef::Log.info "wsrep_cluster_address = #{wsrep_cluster_address}"
@@ -131,23 +80,24 @@ bash "set-wsrep-cluster-address" do
   code <<-EOH
   sed -i 's#.*wsrep_cluster_address.*=.*#wsrep_cluster_address=#{wsrep_cluster_address}#' #{node['mysql']['conf_dir']}/my.cnf
   EOH
-  only_if { (node['galera']['update_wsrep_urls'] == 'yes') || !FileTest.exists?("#{install_flag}") }
+  # TODO: basically - run on lifecycle events 'configure' or 'install'
+  # only_if { (node['galera']['update_wsrep_urls'] == 'yes') || !FileTest.exists?("#{install_flag}") }
 end
 
-# If we are the init node then we need to start the cluster
+# If we are the initial node then we need to start the cluster
 service "init-cluster" do
   service_name node['mysql']['servicename']
   supports :start => true
   start_command "service #{node['mysql']['servicename']} start --wsrep-cluster-address=gcomm://"
   action [:enable, :start]
-  only_if { my_ip == init_host && !FileTest.exists?("#{install_flag}") }
+  only_if { my_ip == init_host }
 end
 
 # Sleep to ensure the init host is dont with its Chef run incase we are provisioning a whole custer at once
 if my_ip != init_host && !File.exists?("#{install_flag}")
-Chef::Log.info "Joiner node sleeping 30 seconds to make sure donor node is up..."
-sleep(node['xtra']['sleep'])
-Chef::Log.info "Joiner node cluster address = gcomm://#{sync_host}:#{node['wsrep']['port']}"
+  Chef::Log.info "Joiner node sleeping #{node['xtra']['sleep']} seconds to make sure donor node is up..."
+  sleep(node['xtra']['sleep'])
+  Chef::Log.info "Joiner node cluster address = gcomm://#{sync_host}:#{node['wsrep']['port']}"
 end
 
 # Start MySQL service
@@ -155,7 +105,7 @@ service "join-cluster" do
   service_name node['mysql']['servicename']
   supports :restart => true, :start => true, :stop => true
   action [:enable, :start]
-  only_if { my_ip != init_host && !FileTest.exists?("#{install_flag}") }
+  only_if { my_ip != init_host }
 end
 
 # Ensure we have joined the cluster and wait until the sync is complete
@@ -172,10 +122,10 @@ bash "wait-until-synced" do
       sleep 1
     done
   EOH
-  only_if { my_ip == init_host && !FileTest.exists?("#{install_flag}") }
+  only_if { my_ip == init_host }
 end
 
-# Ensure the wresp user has approiate permissions
+# Ensure the wresp user has appropriate permissions
 bash "set-wsrep-grants-mysqldump" do
   user "root"
   code <<-EOH
@@ -193,18 +143,4 @@ bash "secure-mysql" do
     #{node['mysql']['mysql_bin']} -uroot -h127.0.0.1 -e "UPDATE mysql.user SET Password=PASSWORD('#{node['mysql']['root_password']}') WHERE User='root'; DELETE FROM mysql.user WHERE User=''; DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1'); FLUSH PRIVILEGES;"
   EOH
   only_if { my_ip == init_host && (node['galera']['secure'] == 'yes') && !FileTest.exists?("#{install_flag}") }
-end
-
-# Ensure the MySQL server service is managed
-service "mysql" do
-  supports :restart => true, :start => true, :stop => true
-  service_name node['mysql']['servicename']
-  action :nothing
-  only_if { FileTest.exists?("#{install_flag}") }
-end
-
-execute "galera-cluster-installed" do
-  command "touch #{install_flag}"
-  action :run
-  not_if { FileTest.exists?("#{install_flag}") }
 end
