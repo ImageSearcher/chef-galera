@@ -55,34 +55,34 @@ include_recipe 'chef-galera::package_repo'
   package package_name
 end
 
-# Create directories for MySQL
-directory node['mysql']['data_dir'] do
-  owner "mysql"
-  group "mysql"
-  mode "0755"
-  action :create
-  recursive true
-end
+# # Create directories for MySQL
+# directory node['mysql']['data_dir'] do
+#   owner "mysql"
+#   group "mysql"
+#   mode "0755"
+#   action :create
+#   recursive true
+# end
 
-directory node['mysql']['run_dir'] do
-  owner "mysql"
-  group "mysql"
-  mode "0755"
-  action :create
-  recursive true
-end
+# directory node['mysql']['run_dir'] do
+#   owner "mysql"
+#   group "mysql"
+#   mode "0755"
+#   action :create
+#   recursive true
+# end
 
-# Install db to the data directory
-execute "setup-mysql-datadir" do
-  command "#{node['mysql']['base_dir']}/scripts/mysql_install_db --force --user=mysql --basedir=#{node['mysql']['base_dir']} --datadir=#{node['mysql']['data_dir']}"
-  not_if { FileTest.exists?("#{node['mysql']['data_dir']}/mysql/user.frm") }
-end
+# # Install db to the data directory
+# execute "setup-mysql-datadir" do
+#   command "#{node['mysql']['base_dir']}/scripts/mysql_install_db --force --user=mysql --basedir=#{node['mysql']['base_dir']} --datadir=#{node['mysql']['data_dir']}"
+#   not_if { FileTest.exists?("#{node['mysql']['data_dir']}/mysql/user.frm") }
+# end
 
-# Copy init script to manage the SQL service
-execute "setup-init.d-mysql-service" do
-  command "cp #{node['mysql']['base_dir']}/support-files/mysql.server /etc/init.d/#{node['mysql']['servicename']}"
-  not_if { FileTest.exists?("#{install_flag}") }
-end
+# # Copy init script to manage the SQL service
+# execute "setup-init.d-mysql-service" do
+#   command "cp #{node['mysql']['base_dir']}/support-files/mysql.server /etc/init.d/#{node['mysql']['servicename']}"
+#   not_if { FileTest.exists?("#{install_flag}") }
+# end
 
 # Ensure my.conf file is correctly configured
 template "my.cnf" do
