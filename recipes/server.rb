@@ -93,8 +93,8 @@ service "init-cluster" do
   only_if { my_ip == init_host }
 end
 
-# Sleep to ensure the init host is dont with its Chef run incase we are provisioning a whole custer at once
-if my_ip != init_host && !File.exists?("#{install_flag}")
+# Sleep to ensure the init host is done with its Chef run in case we are provisioning a whole custer at once
+if my_ip != init_host
   Chef::Log.info "Joiner node sleeping #{node['xtra']['sleep']} seconds to make sure donor node is up..."
   sleep(node['xtra']['sleep'])
   Chef::Log.info "Joiner node cluster address = gcomm://#{sync_host}:#{node['wsrep']['port']}"
@@ -132,7 +132,7 @@ bash "set-wsrep-grants-mysqldump" do
     #{node['mysql']['mysql_bin']} -uroot -h127.0.0.1 -e "GRANT ALL ON *.* TO '#{node['wsrep']['user']}'@'%' IDENTIFIED BY '#{node['wsrep']['password']}'"
     #{node['mysql']['mysql_bin']} -uroot -h127.0.0.1 -e "SET wsrep_on=0; GRANT ALL ON *.* TO '#{node['wsrep']['user']}'@'127.0.0.1' IDENTIFIED BY '#{node['wsrep']['password']}'"
   EOH
-  only_if { my_ip == init_host && (node['wsrep']['sst_method'] == 'mysqldump') && !FileTest.exists?("#{install_flag}") }
+  only_if { my_ip == init_host && (node['wsrep']['sst_method'] == 'mysqldump') }
 end
 
 # Help secure the default MySQL installation
@@ -142,5 +142,5 @@ bash "secure-mysql" do
     #{node['mysql']['mysql_bin']} -uroot -h127.0.0.1 -e "DROP DATABASE IF EXISTS test; DELETE FROM mysql.db WHERE DB='test' OR DB='test\\_%'"
     #{node['mysql']['mysql_bin']} -uroot -h127.0.0.1 -e "UPDATE mysql.user SET Password=PASSWORD('#{node['mysql']['root_password']}') WHERE User='root'; DELETE FROM mysql.user WHERE User=''; DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1'); FLUSH PRIVILEGES;"
   EOH
-  only_if { my_ip == init_host && (node['galera']['secure'] == 'yes') && !FileTest.exists?("#{install_flag}") }
+  only_if { my_ip == init_host && (node['galera']['secure'] == 'yes') }
 end
