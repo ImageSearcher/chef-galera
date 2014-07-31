@@ -33,7 +33,7 @@ default['galera']['apt']['components'] = ['main']
 
 default['xtra']['sleep'] = 30
 
-default['mysql']['install_dir'] = '/usr/local'
+default['mysql']['install_dir'] = '/usr'
 default['mysql']['base_dir'] = "#{mysql['install_dir']}/mysql"
 default['mysql']['bin_dir']  = "#{mysql['base_dir']}/bin"
 default['mysql']['mysql_bin'] = "#{mysql['bin_dir']}/mysql"
