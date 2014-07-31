@@ -28,6 +28,12 @@ include_recipe 'chef-galera::package_repo'
   package package_name
 end
 
+# Some package managers start this automatically
+service 'mysqld' do
+  service_name node['mysql']['servicename']
+  action :stop
+end 
+
 # Ensure my.conf file is correctly configured
 template 'my.cnf' do
   path "#{node['mysql']['conf_dir']}/my.cnf"
@@ -35,7 +41,6 @@ template 'my.cnf' do
   owner 'mysql'
   group 'mysql'
   mode '0644'
-  notifies :restart, 'service[mysql]'
 end
 
 
