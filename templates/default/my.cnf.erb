@@ -30,6 +30,7 @@ socket = <%= node['mysql']['socket'] %>
 port = <%= node['mysql']['port'] %>
 tmpdir = <%= node['mysql']['tmp_dir'] %>
 log_error = <%= node['mysql']['log_file'] %>
+lc-messages-dir = /usr/share/mysql
 
 innodb_buffer_pool_size = <%= node['mysql']['tunable']['buffer_pool_size'] %>
 # buffer pool size > 1GB if you want multiple instances
@@ -49,10 +50,8 @@ innodb_read_io_threads = <%= node['mysql']['tunable']['read_io_threads'] %>
 innodb_write_io_threads = <%= node['mysql']['tunable']['write_io_threads'] %>
 innodb_file_format = <%= node['mysql']['tunable']['file_format'] %>
 innodb_flush_method = <%= node['mysql']['tunable']['flush_method'] %>
-innodb_locks_unsafe_for_binlog = <%= node['mysql']['tunable']['locks_unsafe_for_binlog'] %>
 innodb_autoinc_lock_mode = <%= node['mysql']['tunable']['autoinc_lock_mode'] %>
-engine_condition_pushdown = <%= node['mysql']['tunable']['condition_pushdown'] %>
-
+transaction-isolation = <%= node['mysql']['tunable']['transaction-isolation'] %>
 binlog_format = <%= node['mysql']['tunable']['binlog_format'] %>
 
 #OTHER THINGS, BUFFERS ETC

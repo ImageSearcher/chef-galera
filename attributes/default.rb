@@ -67,9 +67,8 @@ default['mysql']['tunable']['write_io_threads'] = 4
 
 default['mysql']['tunable']['file_format'] = "barracuda"
 default['mysql']['tunable']['flush_method'] = "O_DIRECT"
-default['mysql']['tunable']['locks_unsafe_for_binlog'] = 1
 default['mysql']['tunable']['autoinc_lock_mode'] = 2
-default['mysql']['tunable']['condition_pushdown'] = 1
+default['mysql']['tunable']['transaction-isolation'] = 'READ-COMMITTED'
 
 default['mysql']['tunable']['binlog_format'] = "ROW"
 
