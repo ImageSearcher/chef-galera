@@ -30,11 +30,7 @@ end
 
 # Ensure my.conf file is correctly configured
 template "my.cnf" do
-  if platform?('ubuntu')
-    path "#{node['mysql']['conf_dir']}/conf.d/mariadb.cnf"
-  else
-    path "#{node['mysql']['conf_dir']}/my.cnf"
-  end
+  path "#{node['mysql']['conf_dir']}/my.cnf"
   source "my.cnf.erb"
   owner "mysql"
   group "mysql"
