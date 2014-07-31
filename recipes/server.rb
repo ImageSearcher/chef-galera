@@ -29,19 +29,13 @@ include_recipe 'chef-galera::package_repo'
 end
 
 # Ensure my.conf file is correctly configured
-template "my.cnf" do
+template 'my.cnf' do
   path "#{node['mysql']['conf_dir']}/my.cnf"
-  source "my.cnf.erb"
-  owner "mysql"
-  group "mysql"
-  mode "0644"
-#  notifies :restart, "service[mysql]", :delayed
-end
-
-service "mysql" do
-  supports :restart => true, :start => true, :stop => true
-  service_name node['mysql']['servicename']
-  action :nothing
+  source 'my.cnf.erb'
+  owner 'mysql'
+  group 'mysql'
+  mode '0644'
+  notifies :restart, 'service[mysql]'
 end
 
 
