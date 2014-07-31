@@ -47,6 +47,7 @@ default['mysql']['pid_file'] = "#{mysql['data_dir']}/mysqld.pid"
 default['mysql']['socket']  = "#{mysql['run_dir']}/mysqld.sock"
 default['mysql']['port']    = 3306
 default['mysql']['tmp_dir']  = "/tmp"
+default['mysql']['log_file'] = '/var/log/mysql.err'
 
 default['mysql']['tunable']['buffer_pool_size'] = "256M"
 default['mysql']['tunable']['flush_log_at_trx_commit'] = 2
