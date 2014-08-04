@@ -31,6 +31,16 @@ default['galera']['apt']['keyserver'] = 'keyserver.ubuntu.com'
 default['galera']['apt']['key'] = '0xcbcb082a1bb943db'
 default['galera']['apt']['components'] = ['main']
 
+default['percona']['yum']['baseurl'] = 'http://repo.percona.com/centos/6/os/x86_64/'
+default['percona']['yum']['gpgkey'] = 'http://www.percona.com/downloads/RPM-GPG-KEY-percona'
+default['percona']['yum']['gpgcheck'] = true
+default['percona']['yum']['sslverify'] = true
+
+default['percona']['apt']['uri'] = 'http://repo.percona.com/apt'
+default['percona']['apt']['keyserver'] = 'keys.gnupg.net'
+default['percona']['apt']['key'] = '1C4CBDCDCD2EFD2A'
+default['percona']['apt']['components'] = ['main']
+
 default['xtra']['sleep'] = 30
 
 default['mysql']['install_dir'] = '/usr'

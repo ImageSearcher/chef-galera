@@ -24,7 +24,7 @@ include_recipe 'chef-galera::package_repo'
 
 
 # Install galera packages
-%w(rsync galera mariadb-galera-server mariadb-client).each do |package_name|
+%w(rsync galera mariadb-galera-server mariadb-client percona-xtrabackup).each do |package_name|
   package package_name
 end
 
